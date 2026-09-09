@@ -1,8 +1,0 @@
-{
-  "name": "alumni-sql-console",
-  "private": true,
-  "type": "module",
-  "dependencies": {
-    "oracledb": "^6.5.0"
-  }
-}
