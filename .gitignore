@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.env
+.venv
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Netlify
+.netlify
+node_modules/
+
+# Logs
+logs/
+
+# Virtual environment
+venv/
+
+# Command Code
+.commandcode/
+
+# Wrangler / Cloudflare cache
+cloudflare/.wrangler/
+
+# WAL/SHM files
+*.sqlite-shm
+*.sqlite-wal
