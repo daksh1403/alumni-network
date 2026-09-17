@@ -33,6 +33,9 @@ Desktop.ini
 .netlify
 node_modules/
 
+# Environment variables (keep security)
+webapp/.env
+
 # Logs
 logs/
 
