@@ -1,6 +1,9 @@
 # Alumni Network and Engagement Platform
 
-> A full-stack web application with an interactive SQL console for managing alumni data — runs on SQLite with zero setup.
+> A full-stack web application with an interactive SQL console for managing alumni data — deployed on Cloudflare Workers with full SQL functionality!
+
+## 🚀 Live Demo
+**[https://alumni-sql-console.dakshx.workers.dev/](https://alumni-sql-console.dakshx.workers.dev/)**
 
 ## Table of Contents
 
@@ -10,13 +13,14 @@
 - [Project Structure](#project-structure)
 - [Database Schema](#database-schema)
 - [Getting Started](#getting-started)
-  - [Quick Start (SQLite - No Setup)](#quick-start-sqlite---no-setup)
+  - [Quick Start (Local Development)](#quick-start-local-development)
   - [Docker Deployment](#docker-deployment)
-  - [Cloud Deployment](#cloud-deployment)
+  - [Cloudflare Workers Deployment](#cloudflare-workers-deployment)
 - [Web Console](#web-console)
 - [API Reference](#api-reference)
-- [Preset Queries](#preset-queries)
+- [SQL Features](#sql-features)
 - [Environment Variables](#environment-variables)
+- [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -28,7 +32,8 @@ The application features:
 - A **browser-based SQL terminal** that executes queries against a live database
 - **14 normalized relations** modeling alumni, students, events, donations, mentorship, and jobs
 - **100+ preset SQL queries** covering DDL, DML, joins, subqueries, window functions, and analytics
-- **SQLite** for zero-config local development, with optional **PostgreSQL** support for production
+- **Cloudflare Workers deployment** with Cloudflare D1 database for global edge performance
+- **Local development** with SQLite for zero-config setup
 
 ---
 
@@ -137,7 +142,7 @@ alumni-network/
 
 ## Getting Started
 
-### Quick Start (SQLite - No Setup)
+### Quick Start (Local Development)
 
 The application works out-of-the-box with SQLite — no database installation required.
 
@@ -170,15 +175,32 @@ docker compose up
 # Access the application at http://localhost:8000
 ```
 
-### Cloud Deployment
+### Cloudflare Workers Deployment
 
-Deploy the `webapp/` folder to any Python hosting service (Render, Railway, Fly.io, etc.).
+The application is currently deployed on Cloudflare Workers with Cloudflare D1 database:
 
-For PostgreSQL in production, set the `DATABASE_URL` environment variable:
+**Live URL:** https://alumni-sql-console.dakshx.workers.dev/
+
+To deploy to Cloudflare Workers:
 
 ```bash
-export DATABASE_URL="postgresql://user:pass@host:5432/alumni"
+# Install Wrangler CLI
+npm install -g wrangler
+
+# Login to Cloudflare
+wrangler login
+
+# Navigate to webapp directory
+cd webapp
+
+# Deploy static assets
+wrangler deploy
 ```
+
+The deployment uses:
+- **Cloudflare Workers** for global edge computing
+- **Cloudflare D1** for SQLite database at the edge
+- **Static assets** served from Cloudflare's CDN
 
 ---
 
@@ -315,6 +337,23 @@ The web console includes **100+ preset SQL queries** organized by category:
 
 ---
 
+## SQL Features
+
+### Cloudflare D1 (Current Deployment)
+- ✅ **DQL**: Complete SELECT functionality with complex queries, joins, subqueries
+- ✅ **DML**: INSERT, UPDATE, DELETE with full support
+- ✅ **DDL**: CREATE, ALTER, DROP tables and indexes
+- ✅ **Window Functions**: ROW_NUMBER(), RANK(), LAG(), LEAD(), etc.
+- ✅ **CTEs**: Common Table Expressions
+- ✅ **Aggregations**: COUNT, SUM, AVG, MAX, MIN, GROUP BY
+- ✅ **String Functions**: UPPER, LOWER, LENGTH, SUBSTR, REPLACE, etc.
+- ✅ **Numeric Functions**: ABS, ROUND, CEIL, FLOOR, SQRT, etc.
+- ✅ **Date Functions**: CURRENT_DATE, date arithmetic, etc.
+- ⚠️ **Transactions**: Limited support (requires JavaScript API)
+- ❌ **PL/SQL**: No stored procedures, triggers, or procedural blocks
+
+---
+
 ## Environment Variables
 
 | Variable | Default | Description |
@@ -324,3 +363,25 @@ The web console includes **100+ preset SQL queries** organized by category:
 | `MAX_ROWS` | `1000` | Maximum rows returned per query |
 | `DATABASE_URL` | (empty) | PostgreSQL connection string (enables PostgreSQL mode) |
 | `ALLOWED_ORIGIN` | `*` | CORS allowed origin |
+
+---
+
+## Troubleshooting
+
+### Database Connection Issues
+- **SQLite**: Ensure write permissions in the application directory
+- **Cloudflare D1**: Check D1 database binding in wrangler.jsonc
+
+### Deployment Issues
+- **Cloudflare Workers**: Verify wrangler.jsonc configuration
+- **Local**: Ensure virtual environment is activated and dependencies installed
+
+### Query Errors
+- **Syntax**: Check SQL syntax for SQLite/Cloudflare D1
+- **Permissions**: Verify user has required database permissions
+- **Constraints**: Foreign key constraints may prevent certain operations
+
+### Performance Issues
+- **Large Results**: Use LIMIT clause or reduce MAX_ROWS environment variable
+- **Complex Queries**: Consider adding indexes for frequently joined columns
+- **Network**: Cloudflare Workers may have latency depending on location
