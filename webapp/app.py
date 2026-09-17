@@ -17,8 +17,12 @@ import sqlite3
 import time
 from decimal import Decimal
 from pathlib import Path
+from dotenv import load_dotenv
 
 from flask import Flask, jsonify, request, send_from_directory
+
+# Load environment variables from .env file
+load_dotenv()
 
 HOST = os.getenv("HOST", "127.0.0.1")
 PORT = int(os.getenv("PORT", "8000"))
