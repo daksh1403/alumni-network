@@ -702,7 +702,10 @@ async function loadSchema() {
 /* ---------- samples ---------- */
 (function fillSamples() {
   const wrap = $("samplesList");
-  SAMPLES.forEach(([label, sql], i) => {
+  SAMPLES.forEach((sample, i) => {
+    const [label, sql] = sample.length === 3
+      ? [`${sample[0]} — ${sample[1]}`, sample[2]]
+      : sample;
     const b = document.createElement("button");
     b.className = "sample";
     const num = document.createElement("span");
