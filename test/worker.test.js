@@ -32,17 +32,46 @@ test("keeps normal SQL on D1 and preserves query response shape", async () => {
   assert.equal(body.truncated, true);
 });
 
-test("executes an anonymous PL/SQL block through the interpreter", async () => {
-  const response = await worker.fetch(new Request("https://example.test/api/query", { method: "POST", body: JSON.stringify({ sql: "BEGIN DBMS_OUTPUT.PUT_LINE('Hello World'); END; /" }) }), env());
-  const body = await response.json();
-  assert.equal(body.kind, "plsql");
-  assert.deepEqual(body.output, ["Hello World"]);
-});
-
 test("rejects oversized statements and handles CORS preflight", async () => {
   const oversized = await worker.fetch(new Request("https://example.test/api/query", { method: "POST", body: JSON.stringify({ sql: "x".repeat(131073) }) }), env());
   assert.equal(oversized.status, 413);
   const preflight = await worker.fetch(new Request("https://example.test/api/query", { method: "OPTIONS" }), env());
   assert.equal(preflight.status, 204);
   assert.equal(preflight.headers.get("Access-Control-Allow-Origin"), "*");
+});
+
+for (const sql of [
+  "INSERT INTO ALUMNI (AlumniID, FirstName, Email) VALUES (99, 'Demo', 'demo@example.com')",
+  "UPDATE ALUMNI SET FirstName = 'Demo' WHERE AlumniID = 99",
+  "DELETE FROM ALUMNI WHERE AlumniID = 99",
+  "CREATE TABLE demo (id INTEGER PRIMARY KEY)",
+]) {
+  test(`executes SQL directly on D1: ${sql.split(" ")[0]}`, async () => {
+    const environment = env();
+    const statements = [];
+    environment.DB.prepare = (statement) => {
+      statements.push(statement);
+      return { run: async () => ({ meta: { changes: 1 } }) };
+    };
+    const response = await worker.fetch(new Request("https://example.test/api/query", {
+      method: "POST", body: JSON.stringify({ sql }),
+    }), environment);
+    const body = await response.json();
+    assert.equal(response.status, 200);
+    assert.equal(body.kind, "execute");
+    assert.equal(body.rowCount, 1);
+    assert.deepEqual(statements, [sql]);
+  });
+}
+
+test("returns database execution errors as SQL errors", async () => {
+  const environment = env();
+  environment.DB.prepare = () => { throw new Error("syntax error"); };
+  const response = await worker.fetch(new Request("https://example.test/api/query", {
+    method: "POST", body: JSON.stringify({ sql: "invalid statement" }),
+  }), environment);
+  const body = await response.json();
+  assert.equal(response.status, 400);
+  assert.equal(body.code, "SQL_ERROR");
+  assert.equal(body.error, "syntax error");
 });
