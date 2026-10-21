@@ -1,10 +1,3 @@
-import { detectStatementType } from "./plsql/detect.js";
-import { parse } from "./plsql/parser.js";
-import { execute } from "./plsql/interpreter.js";
-import { D1SqlExecutor } from "./plsql/sql-executor.js";
-import { RoutineService } from "./plsql/routines.js";
-import { TriggerService } from "./plsql/triggers.js";
-
 const DEFAULT_MAX_ROWS = 1000;
 const MAX_SQL_BYTES = 128 * 1024;
 
@@ -67,38 +60,20 @@ async function executeRequest(request, env, corsHeaders) {
     if (new TextEncoder().encode(sql).byteLength > MAX_SQL_BYTES) return json({ ok: false, error: "Statement is too large." }, corsHeaders, 413);
 
     const started = Date.now();
-    const triggers = new TriggerService(env.DB);
-    const sqlExecutor = new D1SqlExecutor(env.DB, { triggers });
-    triggers.sql = sqlExecutor;
-    const routines = new RoutineService(env.DB);
-    const type = detectStatementType(sql);
-
-    if (type === "SQL") {
-      const isQuery = /^\s*(SELECT|WITH|EXPLAIN|PRAGMA)\b/i.test(sql);
-      if (isQuery) {
-        const result = await sqlExecutor.query(sql);
-        const maxRows = Number(env.MAX_ROWS || DEFAULT_MAX_ROWS);
-        const rows = result.rows.slice(0, maxRows);
-        return json({ ok: true, kind: "query", columns: result.columns, rows, rowCount: rows.length, truncated: result.rows.length > maxRows, elapsedMs: Date.now() - started }, corsHeaders);
-      }
-      const result = await sqlExecutor.execute(sql);
-      return json({ ok: true, kind: "execute", message: `Statement executed. ${result.rowsAffected} row(s) affected.`, rowCount: result.rowsAffected, elapsedMs: Date.now() - started }, corsHeaders);
+    const isQuery = /^\s*(SELECT|WITH|EXPLAIN|PRAGMA)\b/i.test(sql);
+    if (isQuery) {
+      const result = await env.DB.prepare(sql).all();
+      const objects = result.results ?? [];
+      const columns = objects.length ? Object.keys(objects[0]) : [];
+      const maxRows = Number(env.MAX_ROWS || DEFAULT_MAX_ROWS);
+      const rows = objects.slice(0, maxRows).map((row) => columns.map((column) => row[column]));
+      return json({ ok: true, kind: "query", columns, rows, rowCount: rows.length, truncated: objects.length > maxRows, elapsedMs: Date.now() - started }, corsHeaders);
     }
-
-    const ast = parse(sql);
-    if (type === "PROCEDURE" || type === "FUNCTION") {
-      await routines.save(ast, sql);
-      return json({ ok: true, kind: "plsql", message: `${type} ${ast.name} created successfully.`, output: [], rowsAffected: 0, elapsedMs: Date.now() - started }, corsHeaders);
-    }
-    if (type === "TRIGGER") {
-      await triggers.save(ast, sql);
-      return json({ ok: true, kind: "plsql", message: `TRIGGER ${ast.name} created successfully.`, output: [], rowsAffected: 0, elapsedMs: Date.now() - started }, corsHeaders);
-    }
-
-    const result = await execute(ast, { sql: sqlExecutor, routines, limits: { maxIterations: Number(env.MAX_ITERATIONS || 10_000), maxOutputLines: Number(env.MAX_OUTPUT_LINES || 1_000), maxCallDepth: Number(env.MAX_CALL_DEPTH || 20) } });
-    return json({ ok: true, kind: "plsql", message: "PL/SQL block executed successfully.", output: result.output, rowsAffected: result.rowsAffected, elapsedMs: Date.now() - started }, corsHeaders);
+    const result = await env.DB.prepare(sql).run();
+    const rowsAffected = result.meta?.changes ?? result.meta?.rows_written ?? 0;
+    return json({ ok: true, kind: "execute", message: `Statement executed. ${rowsAffected} row(s) affected.`, rowCount: rowsAffected, elapsedMs: Date.now() - started }, corsHeaders);
   } catch (error) {
-    return json({ ok: false, error: safeError(error), code: error.code || "PLSQL_ERROR" }, corsHeaders, 400);
+    return json({ ok: false, error: safeError(error), code: error.code || "SQL_ERROR" }, corsHeaders, 400);
   }
 }
 
