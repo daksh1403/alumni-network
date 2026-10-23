@@ -737,7 +737,7 @@ async function boot() {
     if (rec && total) { rec.dataset.to = total; rec.textContent = total; }
 
     $("termTitle").textContent = `sqlplus — ${s.database || h.database || "connected"}`;
-    htmlLine(`<span class="accent">Alumni Network SQL Console</span> — Connected`);
+    htmlLine(`<span class="accent">Project 1 SQL Console</span> — Connected`);
     htmlLine(`<span class="t-muted">Engine:</span> <span class="accent">${esc(engine)}</span> <span class="t-muted">· Database:</span> <span class="accent">${esc(h.database || "")}</span>`);
     htmlLine(`<span class="t-muted">Tracking:</span> ${s.stats.alumni} alumni · ${s.stats.students} students · ${s.stats.events} events · ${s.stats.donations} donations`);
     line("");

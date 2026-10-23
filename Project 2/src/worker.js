@@ -78,7 +78,7 @@ export default {
           return new Response(r.body, { status: r.status, headers: h });
         }
         return json({
-          name: "Alumni Vector Console",
+          name: "Project 2",
           engine: "Qdrant",
           health: "/api/health",
         });

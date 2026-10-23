@@ -1,5 +1,5 @@
 """
-Alumni Network and Engagement Platform
+Project 1: Alumni SQL Console
 Main Flask application entry point.
 
 The backend functionality is organized into separate modules:
@@ -82,7 +82,7 @@ def index():
 # ================================================================
 
 if __name__ == "__main__":
-    print(f"[app] Starting Alumni Network backend on {HOST}:{PORT}")
+    print(f"[app] Starting Project 1 backend on {HOST}:{PORT}")
     app.run(
         host=HOST,
         port=PORT,

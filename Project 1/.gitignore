@@ -1,0 +1,11 @@
+venv/
+__pycache__/
+*.pyc
+.env
+alumni.db
+node_modules/
+.wrangler/
+dist/
+.dev.vars
+.env.*
+!.env.example

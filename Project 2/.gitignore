@@ -7,5 +7,3 @@ node_modules/
 private/
 dist/
 .DS_Store
-test-results/
-playwright-report/

@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+venv/
+.git/
+
+node_modules/
+.wrangler/
+dist/
+.dev.vars
+.env
+.env.*
